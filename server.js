@@ -34,8 +34,19 @@ wss.on('connection', ws => {
             console.log(`User ${user_id} registered and connected`);
             return;  
         }
+
+     
      
         const { from_user, to_user, message: text } = parsedMessage;
+        if (parsedMessage.type === 'typing' || parsedMessage.type === 'stopped_typing') {
+            if (clients[to_user] && clients[to_user].readyState === WebSocket.OPEN) {
+                clients[to_user].send(JSON.stringify(parsedMessage));
+                console.log(`Sent ${parsedMessage.type} event from ${from_user} to ${to_user}`);
+            } else {
+                console.log(`User ${to_user} is not connected`);
+            }
+            return;
+        }
 
         // Store the message in the database
         const query = `INSERT INTO chats (from_user, to_user, message) VALUES (?, ?, ?)`;
